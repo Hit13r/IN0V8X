@@ -187,7 +187,7 @@
 <br>
 
 <div id="webcam-container">
-    <video id="placeholder-text">Webcam will appear here</video>
+    <span id="placeholder-text">Webcam will appear here</span>
 </div>
 
 <div id="label-container"></div>
@@ -238,45 +238,40 @@
     let warningTimeout = null;
     let classifierTimeout = null;
     let isRunning = false;
+    navigator.mediaDevices.getUserMedia({video: true})
 
     async function initClassifier() {
-      console.log("Initializing classifier...");
+        // Hide the timeout page and display the webcam
+        document.getElementById("timeout-page").style.display = "none";
+        document.getElementById("start-button").style.display = "none";
 
-    // Hide the timeout page and display the webcam
-      document.getElementById("timeout-page").style.display = "none";
-      document.getElementById("start-button").style.display = "none";
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
 
-      const modelURL = URL + "model.json";
-      const metadataURL = URL + "metadata.json";
+        const modeSelect = document.getElementById('mode-select');
+        allowedClass = modeSelect.options[modeSelect.selectedIndex].text.toLowerCase();
 
-      const modeSelect = document.getElementById('mode-select');
-      allowedClass = modeSelect.options[modeSelect.selectedIndex].text.toLowerCase();
+        // Load the model and setup webcam
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
 
-    // Load the model and setup webcam
-      model = await tmImage.load(modelURL, metadataURL);
-      maxPredictions = model.getTotalClasses();
+        webcam = new tmImage.Webcam(200, 200, true);
+        await webcam.setup();
+        await webcam.play();
 
-      webcam = new tmImage.Webcam(200, 200, true);
-      await webcam.setup({ facingMode: "user" }); // Use front camera
-      await webcam.play();
-      console.log("Webcam setup and play called.");
+        document.getElementById("placeholder-text").style.display = "none";
+        webcam.canvas.style.display = "block";
+        document.getElementById("webcam-container").appendChild(webcam.canvas);
 
-    // Clear any placeholder text and append the canvas to the container
-      document.getElementById("placeholder-text").style.display = "none";
-      document.getElementById("webcam-container").appendChild(webcam.canvas);
-      webcam.canvas.style.display = "block";
-      console.log("Canvas added to webcam container.");
+        labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = ''; // Clear previous labels
+        for (let i = 0; i < maxPredictions; i++) {
+            labelContainer.appendChild(document.createElement("div"));
+        }
 
-      labelContainer = document.getElementById("label-container");
-      labelContainer.innerHTML = ''; // Clear previous labels
-      for (let i = 0; i < maxPredictions; i++) {
-          labelContainer.appendChild(document.createElement("div"));
-      }
-
-      isRunning = true;
-      window.requestAnimationFrame(loop);
+        isRunning = true;
+        window.requestAnimationFrame(loop);
     }
-
 
     async function loop() {
         if (!isRunning) return;
@@ -369,28 +364,8 @@
         document.getElementById("start-button").style.display = "block"; // Show start button on timeout
     }
 
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    .then(stream => {
-        // Attach stream to video element
-        const video = document.querySelector('video');
-        video.srcObject = stream;
-    })
-    .catch(error => {
-        console.error('Error accessing media devices.', error);
-    });
-
-    async function testWebcamDisplay() {
-      webcam = new tmImage.Webcam(200, 200, true);
-      await webcam.setup();
-      await webcam.play();
-      document.getElementById("webcam-container").appendChild(webcam.canvas);
-      console.log("Webcam display test successful.");
-    }
-
-    testWebcamDisplay();
-
-
 </script>
 
 </body>
 </html>
+
