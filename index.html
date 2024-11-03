@@ -256,8 +256,9 @@
         maxPredictions = model.getTotalClasses();
 
         webcam = new tmImage.Webcam(200, 200, true);
-        await webcam.setup();
+        await webcam.setup({ facingMode: "user" }); // Use front camera
         await webcam.play();
+        
 
         document.getElementById("placeholder-text").style.display = "none";
         webcam.canvas.style.display = "block";
